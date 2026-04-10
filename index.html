@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>Pinterest</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+:root{
+  --red:#e60023;--red2:#ad081b;
+  --black:#111;--gray:#767676;--lgray:#efefef;--white:#fff;
+  --radius:16px;--card-radius:16px;
+  --nav-h:56px;--bottom-h:64px;
+}
+body{font-family:'Nunito',sans-serif;background:#fff;color:var(--black);overflow-x:hidden;min-height:100vh;}
+
+/* ===== TOP NAV ===== */
+#top-nav{position:fixed;top:0;left:0;right:0;z-index:100;background:#fff;border-bottom:1px solid #e0e0e0;height:var(--nav-h);display:flex;align-items:center;padding:0 12px;gap:8px;}
+#logo{display:flex;align-items:center;gap:6px;font-size:22px;font-weight:900;color:var(--red);flex-shrink:0;}
+#logo svg{width:26px;height:26px;}
+#search-bar{flex:1;display:flex;align-items:center;background:var(--lgray);border-radius:24px;padding:8px 14px;gap:8px;}
+#search-bar svg{color:var(--gray);flex-shrink:0;}
+#search-bar input{border:none;background:transparent;outline:none;font-size:14px;font-family:'Nunito',sans-serif;width:100%;color:var(--black);}
+#search-bar input::placeholder{color:var(--gray);}
+#notif-btn{width:38px;height:38px;border-radius:50%;background:var(--lgray);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;}
+#notif-dot{position:absolute;top:6px;right:6px;width:8px;height:8px;background:var(--red);border-radius:50%;border:2px solid #fff;}
+
+/* ===== BOTTOM NAV ===== */
+#bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;background:#fff;border-top:1px solid #e0e0e0;height:var(--bottom-h);display:flex;align-items:center;justify-content:space-around;padding:0 4px;}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;padding:8px 4px;border:none;background:none;color:var(--gray);font-family:'Nunito',sans-serif;font-size:10px;font-weight:700;}
+.nav-item.active{color:var(--black);}
+.nav-item svg{width:24px;height:24px;}
+.nav-item.upload-btn{background:var(--black);border-radius:50%;width:48px;height:48px;padding:0;flex:0 0 48px;color:#fff;}
+.nav-item.upload-btn svg{width:22px;height:22px;}
+
+/* ===== PAGES ===== */
+.page{display:none;padding-top:calc(var(--nav-h)+8px);padding-bottom:calc(var(--bottom-h)+8px);min-height:100vh;}
+.page.active{display:block;}
+
+/* ===== BERANDA / FOR YOU ===== */
+#page-home{}
+.category-tabs{display:flex;gap:8px;padding:10px 12px;overflow-x:auto;scrollbar-width:none;}
+.category-tabs::-webkit-scrollbar{display:none;}
+.cat-tab{flex-shrink:0;padding:8px 16px;border-radius:24px;border:none;cursor:pointer;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;background:var(--lgray);color:var(--black);transition:all .2s;}
+.cat-tab.active{background:var(--black);color:#fff;}
+
+/* Masonry Grid */
+.masonry{columns:2;column-gap:8px;padding:0 8px 16px;}
+.pin-card{break-inside:avoid;margin-bottom:8px;border-radius:var(--card-radius);overflow:hidden;cursor:pointer;position:relative;background:var(--lgray);}
+.pin-card img{width:100%;display:block;border-radius:var(--card-radius);}
+.pin-card .pin-overlay{position:absolute;bottom:0;left:0;right:0;padding:10px;background:linear-gradient(transparent,rgba(0,0,0,.5));border-radius:0 0 var(--card-radius) var(--card-radius);opacity:0;transition:opacity .2s;}
+.pin-card:hover .pin-overlay{opacity:1;}
+.pin-card .pin-save{position:absolute;top:8px;right:8px;background:var(--red);color:#fff;border:none;border-radius:20px;padding:6px 14px;font-size:13px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;opacity:0;transition:opacity .2s;z-index:2;}
+.pin-card:hover .pin-save{opacity:1;}
+.pin-card .pin-title{font-size:12px;font-weight:700;color:#fff;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.pin-card .pin-board{font-size:11px;color:rgba(255,255,255,.8);}
+.pin-heart{position:absolute;bottom:8px;right:8px;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.9);border:none;cursor:pointer;display:none;align-items:center;justify-content:center;}
+.pin-card:hover .pin-heart{display:flex;}
+
+/* ===== SEARCH PAGE ===== */
+#page-search{}
+.search-page-bar{display:flex;align-items:center;background:var(--lgray);border-radius:24px;padding:10px 16px;gap:10px;margin:0 12px 12px;}
+.search-page-bar input{flex:1;border:none;background:transparent;outline:none;font-size:15px;font-family:'Nunito',sans-serif;}
+.trending-section{padding:0 12px;}
+.section-title{font-size:18px;font-weight:900;margin-bottom:12px;}
+.trend-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.trend-card{border-radius:var(--card-radius);overflow:hidden;position:relative;cursor:pointer;height:110px;}
+.trend-card img{width:100%;height:100%;object-fit:cover;}
+.trend-card .trend-label{position:absolute;bottom:0;left:0;right:0;padding:8px 10px;background:linear-gradient(transparent,rgba(0,0,0,.6));color:#fff;font-size:13px;font-weight:800;}
+.search-results{padding:0 8px;margin-top:12px;}
+.search-results .masonry{padding:0;}
+.no-results{text-align:center;padding:40px 20px;color:var(--gray);}
+.no-results svg{width:48px;height:48px;margin-bottom:12px;}
+
+/* ===== UPLOAD MODAL ===== */
+#upload-modal{position:fixed;inset:0;z-index:200;display:none;flex-direction:column;}
+#upload-modal.open{display:flex;}
+#upload-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.5);}
+#upload-sheet{position:relative;margin-top:auto;background:#fff;border-radius:24px 24px 0 0;padding:20px;max-height:90vh;overflow-y:auto;}
+.sheet-handle{width:40px;height:4px;background:#ddd;border-radius:4px;margin:0 auto 20px;}
+.sheet-title{font-size:20px;font-weight:900;margin-bottom:20px;}
+#upload-drop{border:2px dashed #ddd;border-radius:var(--radius);padding:40px 20px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:16px;}
+#upload-drop:hover,#upload-drop.dragover{border-color:var(--red);background:#fff5f5;}
+#upload-drop svg{width:48px;height:48px;color:var(--gray);margin-bottom:12px;}
+#upload-drop p{font-size:14px;color:var(--gray);}
+#upload-drop strong{color:var(--red);}
+#file-input{display:none;}
+#upload-preview{display:none;margin-bottom:16px;border-radius:var(--radius);overflow:hidden;position:relative;}
+#upload-preview img{width:100%;max-height:300px;object-fit:cover;}
+#remove-preview{position:absolute;top:8px;right:8px;width:32px;height:32px;border-radius:50%;background:rgba(0,0,0,.6);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.upload-field{margin-bottom:12px;}
+.upload-field label{display:block;font-size:13px;font-weight:700;margin-bottom:6px;color:var(--gray);}
+.upload-field input,.upload-field textarea,.upload-field select{width:100%;padding:12px 14px;border:2px solid #efefef;border-radius:12px;font-size:14px;font-family:'Nunito',sans-serif;outline:none;transition:border-color .2s;background:#fff;}
+.upload-field input:focus,.upload-field textarea:focus,.upload-field select:focus{border-color:var(--black);}
+.upload-field textarea{resize:vertical;min-height:80px;}
+.btn-publish{width:100%;background:var(--red);color:#fff;border:none;border-radius:24px;padding:14px;font-size:16px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;transition:background .2s;}
+.btn-publish:hover{background:var(--red2);}
+.btn-cancel{width:100%;background:var(--lgray);color:var(--black);border:none;border-radius:24px;padding:14px;font-size:16px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;margin-top:8px;}
+
+/* ===== PIN DETAIL MODAL ===== */
+#pin-modal{position:fixed;inset:0;z-index:200;display:none;flex-direction:column;background:#fff;overflow-y:auto;}
+#pin-modal.open{display:flex;}
+#pin-modal-header{position:sticky;top:0;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #f0f0f0;z-index:10;}
+#pin-modal-back{width:38px;height:38px;border-radius:50%;border:none;background:var(--lgray);cursor:pointer;display:flex;align-items:center;justify-content:center;}
+#pin-modal-actions{display:flex;gap:8px;align-items:center;}
+#save-pin-btn{background:var(--red);color:#fff;border:none;border-radius:20px;padding:10px 20px;font-size:14px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;}
+#pin-modal-img{width:100%;display:block;}
+#pin-modal-content{padding:16px;}
+#pin-modal-title{font-size:22px;font-weight:900;margin-bottom:8px;}
+#pin-modal-desc{font-size:14px;color:var(--gray);margin-bottom:16px;line-height:1.6;}
+#pin-modal-user{display:flex;align-items:center;gap:10px;margin-bottom:20px;}
+.user-avatar{width:40px;height:40px;border-radius:50%;object-fit:cover;background:var(--lgray);}
+.user-name{font-size:14px;font-weight:700;}
+.user-follow{font-size:13px;color:var(--red);font-weight:700;cursor:pointer;}
+.pin-stats{display:flex;gap:16px;margin-bottom:20px;}
+.pin-stat{font-size:13px;color:var(--gray);}
+.pin-stat strong{color:var(--black);}
+/* Comments */
+.comments-section{border-top:1px solid #f0f0f0;padding-top:16px;}
+.comments-title{font-size:16px;font-weight:800;margin-bottom:12px;}
+.comment-item{display:flex;gap:10px;margin-bottom:14px;}
+.comment-avatar{width:34px;height:34px;border-radius:50%;object-fit:cover;background:var(--lgray);flex-shrink:0;}
+.comment-body{flex:1;}
+.comment-user{font-size:13px;font-weight:700;}
+.comment-text{font-size:13px;color:#444;margin-top:2px;}
+.comment-time{font-size:11px;color:var(--gray);margin-top:2px;}
+.comment-input-row{display:flex;align-items:center;gap:10px;margin-top:16px;padding-top:16px;border-top:1px solid #f0f0f0;}
+.comment-input-row img{width:34px;height:34px;border-radius:50%;object-fit:cover;}
+.comment-input-wrap{flex:1;display:flex;background:var(--lgray);border-radius:24px;padding:8px 14px;gap:8px;}
+.comment-input-wrap input{flex:1;border:none;background:transparent;outline:none;font-size:13px;font-family:'Nunito',sans-serif;}
+.comment-send{background:none;border:none;cursor:pointer;color:var(--red);font-weight:800;font-size:14px;}
+.related-pins{margin-top:20px;border-top:1px solid #f0f0f0;padding-top:16px;}
+.related-title{font-size:16px;font-weight:800;margin-bottom:12px;}
+
+/* ===== CHAT PAGE ===== */
+#page-chat{}
+.chat-header{padding:16px 12px 8px;font-size:22px;font-weight:900;}
+.chat-search{display:flex;align-items:center;background:var(--lgray);border-radius:24px;padding:10px 14px;gap:8px;margin:0 12px 12px;}
+.chat-search input{flex:1;border:none;background:transparent;outline:none;font-size:14px;font-family:'Nunito',sans-serif;}
+.chat-list{}
+.chat-item{display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer;transition:background .15s;}
+.chat-item:hover,.chat-item.active{background:#f9f9f9;}
+.chat-avatar{position:relative;flex-shrink:0;}
+.chat-avatar img{width:52px;height:52px;border-radius:50%;object-fit:cover;}
+.online-dot{position:absolute;bottom:2px;right:2px;width:12px;height:12px;background:#00c853;border-radius:50%;border:2px solid #fff;}
+.chat-info{flex:1;min-width:0;}
+.chat-name{font-size:15px;font-weight:700;}
+.chat-preview{font-size:13px;color:var(--gray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.chat-meta{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;}
+.chat-time{font-size:11px;color:var(--gray);}
+.chat-badge{background:var(--red);color:#fff;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;}
+/* Chat Conversation */
+#chat-convo{position:fixed;inset:0;z-index:150;display:none;flex-direction:column;background:#fff;}
+#chat-convo.open{display:flex;}
+#chat-convo-header{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid #f0f0f0;}
+#chat-back{width:36px;height:36px;border-radius:50%;border:none;background:var(--lgray);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.convo-avatar{width:40px;height:40px;border-radius:50%;object-fit:cover;}
+.convo-info{flex:1;}
+.convo-name{font-size:15px;font-weight:800;}
+.convo-status{font-size:12px;color:#00c853;}
+#chat-messages{flex:1;overflow-y:auto;padding:16px 12px;display:flex;flex-direction:column;gap:8px;}
+.msg{max-width:75%;padding:10px 14px;border-radius:18px;font-size:14px;line-height:1.4;position:relative;}
+.msg.received{align-self:flex-start;background:var(--lgray);border-bottom-left-radius:4px;}
+.msg.sent{align-self:flex-end;background:var(--red);color:#fff;border-bottom-right-radius:4px;}
+.msg-time{font-size:10px;opacity:.6;margin-top:4px;text-align:right;}
+.msg-img{max-width:100%;border-radius:12px;display:block;}
+#chat-input-bar{display:flex;align-items:center;gap:8px;padding:8px 12px;border-top:1px solid #f0f0f0;}
+#chat-input-bar input{flex:1;border:none;background:var(--lgray);border-radius:24px;padding:10px 16px;font-size:14px;font-family:'Nunito',sans-serif;outline:none;}
+#chat-send{width:40px;height:40px;border-radius:50%;background:var(--red);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+
+/* ===== PROFIL PAGE ===== */
+#page-profile{padding-top:var(--nav-h);}
+.profile-header{text-align:center;padding:24px 16px 16px;}
+.profile-avatar{width:90px;height:90px;border-radius:50%;object-fit:cover;margin:0 auto 12px;border:3px solid #f0f0f0;display:block;}
+.profile-name{font-size:22px;font-weight:900;margin-bottom:4px;}
+.profile-username{font-size:14px;color:var(--gray);margin-bottom:12px;}
+.profile-stats{display:flex;justify-content:center;gap:32px;margin-bottom:16px;}
+.profile-stat{text-align:center;}
+.profile-stat-num{font-size:18px;font-weight:900;}
+.profile-stat-label{font-size:12px;color:var(--gray);}
+.profile-btns{display:flex;gap:10px;justify-content:center;margin-bottom:8px;}
+.btn-edit{background:var(--lgray);color:var(--black);border:none;border-radius:20px;padding:10px 22px;font-size:14px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;}
+.btn-share-p{background:var(--lgray);color:var(--black);border:none;border-radius:20px;padding:10px 16px;font-size:14px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;}
+.profile-tabs{display:flex;border-bottom:2px solid #f0f0f0;margin-bottom:8px;}
+.profile-tab{flex:1;text-align:center;padding:12px;font-size:14px;font-weight:700;color:var(--gray);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;}
+.profile-tab.active{color:var(--black);border-bottom-color:var(--black);}
+.profile-pins{padding:0 8px 8px;columns:2;column-gap:8px;}
+.profile-pins .pin-card{margin-bottom:8px;}
+/* Boards */
+.boards-grid{padding:8px 12px;display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.board-card{border-radius:var(--card-radius);overflow:hidden;cursor:pointer;background:var(--lgray);}
+.board-imgs{display:grid;grid-template-columns:1fr 1fr;height:100px;}
+.board-imgs img{width:100%;height:100%;object-fit:cover;}
+.board-imgs .board-main{grid-column:1;grid-row:1/3;}
+.board-name{font-size:13px;font-weight:800;padding:8px 10px 4px;}
+.board-count{font-size:11px;color:var(--gray);padding:0 10px 8px;}
+
+/* ===== EDIT PROFILE MODAL ===== */
+#edit-modal{position:fixed;inset:0;z-index:200;display:none;flex-direction:column;}
+#edit-modal.open{display:flex;}
+#edit-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.5);}
+#edit-sheet{position:relative;margin-top:auto;background:#fff;border-radius:24px 24px 0 0;padding:20px;max-height:85vh;overflow-y:auto;}
+.edit-avatar-wrap{text-align:center;margin-bottom:20px;}
+.edit-avatar-wrap img{width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid #f0f0f0;}
+.edit-avatar-btn{display:block;margin:8px auto 0;background:none;border:none;color:var(--red);font-size:13px;font-weight:700;cursor:pointer;}
+
+/* ===== TOAST ===== */
+#toast{position:fixed;bottom:calc(var(--bottom-h)+20px);left:50%;transform:translateX(-50%) translateY(20px);background:rgba(0,0,0,.85);color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:700;z-index:300;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ===== LOADING SKELETON ===== */
+.skeleton{background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;}
+@keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:#ddd;border-radius:4px;}
+
+/* Fade in */
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.pin-card{animation:fadeIn .3s ease both;}
+</style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav id="top-nav">
+  <div id="logo">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 0 1 .083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.632-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/></svg>
+    Pinterest
+  </div>
+  <div id="search-bar">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" id="main-search" placeholder="Cari ide..." autocomplete="off"/>
+  </div>
+  <button id="notif-btn" onclick="showToast('Tidak ada notifikasi baru')">
+    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    <span id="notif-dot"></span>
+  </button>
+</nav>
+
+<!-- PAGES -->
+<!-- BERANDA -->
+<div class="page active" id="page-home">
+  <div class="category-tabs" id="cat-tabs"></div>
+  <div class="masonry" id="pins-grid"></div>
+</div>
+
+<!-- SEARCH -->
+<div class="page" id="page-search">
+  <div style="padding:12px 12px 0;">
+    <div class="search-page-bar">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="search-input" placeholder="Cari dekorasi, resep, mode..."/>
+      <button id="search-clear" style="background:none;border:none;cursor:pointer;color:var(--gray);display:none;">✕</button>
+    </div>
+  </div>
+  <div id="search-trending">
+    <div class="trending-section">
+      <div class="section-title">Ide trending ✨</div>
+      <div class="trend-grid" id="trend-grid"></div>
+    </div>
+  </div>
+  <div id="search-results-section" style="display:none;">
+    <div class="search-results"><div class="masonry" id="search-pins"></div></div>
+  </div>
+</div>
+
+<!-- CHAT -->
+<div class="page" id="page-chat">
+  <div class="chat-header">Pesan</div>
+  <div class="chat-search">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" placeholder="Cari percakapan..."/>
+  </div>
+  <div class="chat-list" id="chat-list"></div>
+</div>
+
+<!-- PROFIL -->
+<div class="page" id="page-profile">
+  <div class="profile-header">
+    <img src="https://i.pravatar.cc/150?img=47" alt="Profil" class="profile-avatar" id="profile-avatar"/>
+    <div class="profile-name" id="profile-name">Putri Cantika</div>
+    <div class="profile-username" id="profile-username">@putricantika</div>
+    <div class="profile-stats">
+      <div class="profile-stat"><div class="profile-stat-num" id="stat-saved">248</div><div class="profile-stat-label">Tersimpan</div></div>
+      <div class="profile-stat"><div class="profile-stat-num" id="stat-followers">1.2rb</div><div class="profile-stat-label">Pengikut</div></div>
+      <div class="profile-stat"><div class="profile-stat-num" id="stat-following">189</div><div class="profile-stat-label">Diikuti</div></div>
+    </div>
+    <div class="profile-btns">
+      <button class="btn-edit" onclick="openEditModal()">Edit profil</button>
+      <button class="btn-share-p" onclick="showToast('Tautan profil disalin!')">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="profile-tabs">
+    <div class="profile-tab active" onclick="switchProfileTab('pins',this)">Pin tersimpan</div>
+    <div class="profile-tab" onclick="switchProfileTab('boards',this)">Papan</div>
+    <div class="profile-tab" onclick="switchProfileTab('made',this)">Dibuat</div>
+  </div>
+  <div id="profile-pins-tab">
+    <div class="profile-pins" id="profile-pins-grid"></div>
+  </div>
+  <div id="profile-boards-tab" style="display:none;">
+    <div class="boards-grid" id="boards-grid"></div>
+  </div>
+  <div id="profile-made-tab" style="display:none;">
+    <div class="masonry" id="made-pins-grid" style="padding:8px;"></div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav id="bottom-nav">
+  <button class="nav-item active" data-page="home" onclick="navigate('home')">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+    Beranda
+  </button>
+  <button class="nav-item" data-page="search" onclick="navigate('search')">
+    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    Cari
+  </button>
+  <button class="nav-item upload-btn" onclick="openUpload()">
+    <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  </button>
+  <button class="nav-item" data-page="chat" onclick="navigate('chat')">
+    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    Pesan
+  </button>
+  <button class="nav-item" data-page="profile" onclick="navigate('profile')">
+    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    Profil
+  </button>
+</nav>
+
+<!-- PIN DETAIL MODAL -->
+<div id="pin-modal">
+  <div id="pin-modal-header">
+    <button id="pin-modal-back" onclick="closePinModal()">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5m0 0 7 7m-7-7 7-7"/></svg>
+    </button>
+    <div id="pin-modal-actions">
+      <button id="pin-more" style="background:var(--lgray);border:none;border-radius:50%;width:38px;height:38px;cursor:pointer;display:flex;align-items:center;justify-content:center;" onclick="showToast('Opsi lainnya')">
+        <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+      </button>
+      <button id="save-pin-btn" onclick="saveCurrentPin()">Simpan</button>
+    </div>
+  </div>
+  <img id="pin-modal-img" src="" alt=""/>
+  <div id="pin-modal-content">
+    <h2 id="pin-modal-title"></h2>
+    <p id="pin-modal-desc"></p>
+    <div id="pin-modal-user">
+      <img class="user-avatar" src="" alt="" id="pm-avatar"/>
+      <div style="flex:1">
+        <div class="user-name" id="pm-name"></div>
+        <div style="font-size:12px;color:var(--gray)" id="pm-followers"></div>
+      </div>
+      <button class="user-follow" id="pm-follow-btn" onclick="toggleFollow(this)">Ikuti</button>
+    </div>
+    <div class="pin-stats">
+      <span class="pin-stat"><strong id="pm-likes">0</strong> suka</span>
+      <span class="pin-stat"><strong id="pm-saves">0</strong> disimpan</span>
+      <span class="pin-stat"><strong id="pm-views">0</strong> dilihat</span>
+    </div>
+    <div class="comments-section">
+      <div class="comments-title" id="comments-count">Komentar</div>
+      <div id="comments-list"></div>
+      <div class="comment-input-row">
+        <img src="https://i.pravatar.cc/150?img=47" alt="" style="width:34px;height:34px;border-radius:50%;object-fit:cover;"/>
+        <div class="comment-input-wrap">
+          <input type="text" id="comment-input" placeholder="Tambahkan komentar..."/>
+          <button class="comment-send" onclick="sendComment()">Kirim</button>
+        </div>
+      </div>
+    </div>
+    <div class="related-pins">
+      <div class="related-title">Pin serupa</div>
+      <div class="masonry" id="related-pins-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- UPLOAD MODAL -->
+<div id="upload-modal">
+  <div id="upload-backdrop" onclick="closeUpload()"></div>
+  <div id="upload-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Buat Pin baru</div>
+    <div id="upload-drop" onclick="document.getElementById('file-input').click()" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="handleDrop(event)">
+      <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <p>Tarik & lepas gambar di sini<br/>atau <strong>klik untuk memilih file</strong></p>
+    </div>
+    <input type="file" id="file-input" accept="image/*" onchange="handleFileSelect(event)"/>
+    <div id="upload-preview"><img id="preview-img" src="" alt=""/><button id="remove-preview" onclick="removePreview()">✕</button></div>
+    <div class="upload-field"><label>Judul</label><input type="text" id="pin-title" placeholder="Tambahkan judul"/></div>
+    <div class="upload-field"><label>Deskripsi</label><textarea id="pin-desc" placeholder="Ceritakan tentang pin ini..."></textarea></div>
+    <div class="upload-field"><label>Tautan (opsional)</label><input type="url" id="pin-link" placeholder="https://"/></div>
+    <div class="upload-field"><label>Simpan ke papan</label>
+      <select id="pin-board">
+        <option>Pilih papan...</option>
+        <option>Mode & Fashion</option>
+        <option>Dekorasi Rumah</option>
+        <option>Kuliner</option>
+        <option>Inspirasi</option>
+        <option>Travel</option>
+        <option>DIY & Craft</option>
+      </select>
+    </div>
+    <button class="btn-publish" onclick="publishPin()">Publikasikan</button>
+    <button class="btn-cancel" onclick="closeUpload()">Batal</button>
+  </div>
+</div>
+
+<!-- EDIT PROFILE MODAL -->
+<div id="edit-modal">
+  <div id="edit-backdrop" onclick="closeEditModal()"></div>
+  <div id="edit-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">Edit profil</div>
+    <div class="edit-avatar-wrap">
+      <img src="https://i.pravatar.cc/150?img=47" alt="" id="edit-avatar-img"/>
+      <button class="edit-avatar-btn" onclick="showToast('Ubah foto profil')">Ubah foto profil</button>
+    </div>
+    <div class="upload-field"><label>Nama</label><input type="text" id="edit-name" value="Putri Cantika"/></div>
+    <div class="upload-field"><label>Username</label><input type="text" id="edit-username" value="@putricantika"/></div>
+    <div class="upload-field"><label>Bio</label><textarea id="edit-bio" placeholder="Ceritakan tentang dirimu...">✨ Pecinta mode & dekorasi | Jakarta 🌸</textarea></div>
+    <div class="upload-field"><label>Website</label><input type="url" id="edit-website" placeholder="https://"/></div>
+    <button class="btn-publish" onclick="saveProfile()">Simpan</button>
+    <button class="btn-cancel" onclick="closeEditModal()">Batal</button>
+  </div>
+</div>
+
+<!-- CHAT CONVERSATION -->
+<div id="chat-convo">
+  <div id="chat-convo-header">
+    <button id="chat-back" onclick="closeConvo()">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5m0 0 7 7m-7-7 7-7"/></svg>
+    </button>
+    <img class="convo-avatar" id="convo-avatar" src="" alt=""/>
+    <div class="convo-info">
+      <div class="convo-name" id="convo-name"></div>
+      <div class="convo-status" id="convo-status">Online</div>
+    </div>
+    <button style="background:var(--lgray);border:none;border-radius:50%;width:36px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center;" onclick="showToast('Info pengguna')">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    </button>
+  </div>
+  <div id="chat-messages"></div>
+  <div id="chat-input-bar">
+    <button style="background:none;border:none;cursor:pointer;color:var(--gray);" onclick="showToast('Kirim gambar')">
+      <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+    </button>
+    <input type="text" id="convo-input" placeholder="Tulis pesan..." onkeypress="if(event.key==='Enter')sendMessage()"/>
+    <button id="chat-send" onclick="sendMessage()">
+      <svg width="18" height="18" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+// ===== DATA =====
+const PINS = [
+  {id:1,img:'https://picsum.photos/seed/hijab1/400/560',title:'Outfit Hijab Casual Kekinian',desc:'Inspirasi outfit hijab casual yang nyaman dan stylish untuk sehari-hari. Cocok untuk berbagai acara.',user:'Siti Fashionista',avatar:'https://i.pravatar.cc/150?img=1',followers:'12rb pengikut',likes:342,saves:189,views:2841,board:'Mode & Fashion',tags:['hijab','fashion','outfit']},
+  {id:2,img:'https://picsum.photos/seed/room2/400/480',title:'Dekorasi Kamar Aesthetic Pink',desc:'Inspirasi dekorasi kamar tidur warna pink yang aesthetic dan cozy.',user:'HomeDecor ID',avatar:'https://i.pravatar.cc/150?img=2',followers:'45rb pengikut',likes:891,saves:654,views:12093,board:'Dekorasi Rumah',tags:['kamar','dekorasi','pink']},
+  {id:3,img:'https://picsum.photos/seed/food3/400/500',title:'Resep Nasi Goreng Spesial',desc:'Nasi goreng dengan bumbu rahasia yang bikin nagih. Mudah dibuat di rumah.',user:'DapurMama',avatar:'https://i.pravatar.cc/150?img=3',followers:'89rb pengikut',likes:1203,saves:892,views:34521,board:'Kuliner',tags:['resep','masakan','nasigoreng']},
+  {id:4,img:'https://picsum.photos/seed/nature4/400/600',title:'Destinasi Wisata Alam Indonesia',desc:'10 tempat wisata alam Indonesia yang wajib dikunjungi sebelum mati.',user:'TravelIndo',avatar:'https://i.pravatar.cc/150?img=4',followers:'234rb pengikut',likes:5634,saves:3421,views:98234,board:'Travel',tags:['wisata','alam','indonesia']},
+  {id:5,img:'https://picsum.photos/seed/fashion5/400/520',title:'OOTD Casual Minimalis',desc:'Outfit of the day simpel namun tetap terlihat stylish dan elegan.',user:'StyleMinimal',avatar:'https://i.pravatar.cc/150?img=5',followers:'67rb pengikut',likes:2341,saves:1892,views:45231,board:'Mode & Fashion',tags:['ootd','casual','minimalis']},
+  {id:6,img:'https://picsum.photos/seed/kpop6/400/450',title:'Aesthetic K-Pop Wallpaper',desc:'Koleksi wallpaper K-Pop aesthetic untuk HP kamu.',user:'KPopLover',avatar:'https://i.pravatar.cc/150?img=6',followers:'156rb pengikut',likes:8921,saves:7234,views:234521,board:'K-Pop',tags:['kpop','wallpaper','aesthetic']},
+  {id:7,img:'https://picsum.photos/seed/beauty7/400/540',title:'Tutorial Makeup Natural',desc:'Step by step makeup natural untuk tampil cantik setiap hari.',user:'BeautyIndo',avatar:'https://i.pravatar.cc/150?img=7',followers:'321rb pengikut',likes:12453,saves:9876,views:456789,board:'Kecantikan',tags:['makeup','tutorial','natural']},
+  {id:8,img:'https://picsum.photos/seed/book8/400/460',title:'Rekomendasi Buku Self Help',desc:'10 buku self improvement yang wajib kamu baca tahun ini.',user:'BookLover',avatar:'https://i.pravatar.cc/150?img=8',followers:'43rb pengikut',likes:876,saves:1234,views:23456,board:'Buku',tags:['buku','selfdevelopment','reading']},
+  {id:9,img:'https://picsum.photos/seed/pet9/400/480',title:'Puppy Lucu Banget 🐶',desc:'Foto-foto anak anjing yang menggemaskan dan bikin hati melt.',user:'PetLovers',avatar:'https://i.pravatar.cc/150?img=9',followers:'567rb pengikut',likes:45678,saves:23456,views:1234567,board:'Hewan Peliharaan',tags:['puppy','anjing','cute']},
+  {id:10,img:'https://picsum.photos/seed/diy10/400/520',title:'DIY Room Decor Mudah',desc:'Cara membuat dekorasi kamar sendiri dari bahan bekas yang murah.',user:'DIYCreative',avatar:'https://i.pravatar.cc/150?img=10',followers:'92rb pengikut',likes:3456,saves:5678,views:89012,board:'DIY & Craft',tags:['diy','dekorasi','craft']},
+  {id:11,img:'https://picsum.photos/seed/garden11/400/560',title:'Taman Mini di Rumah',desc:'Cara membuat taman mini indoor yang cantik dan menyegarkan.',user:'GardenIndo',avatar:'https://i.pravatar.cc/150?img=11',followers:'28rb pengikut',likes:1234,saves:987,views:34521,board:'Taman',tags:['tanaman','taman','indoor']},
+  {id:12,img:'https://picsum.photos/seed/selfie12/400/500',title:'Foto Aesthetic Selfie Tips',desc:'Tips dan trik biar foto selfie kamu makin aesthetic dan instagrammable.',user:'PhotoTips',avatar:'https://i.pravatar.cc/150?img=12',followers:'134rb pengikut',likes:6789,saves:4321,views:123456,board:'Fotografi',tags:['selfie','foto','aesthetic']},
+];
+
+const CATEGORIES = ['Untuk Anda','Mode','Dekorasi','Kuliner','Travel','K-Pop','Kecantikan','DIY','Fitness','Teknologi'];
+
+const TRENDING = [
+  {label:'Fashion Hijab',img:'https://picsum.photos/seed/tr1/300/200'},
+  {label:'Dekorasi Aesthetic',img:'https://picsum.photos/seed/tr2/300/200'},
+  {label:'Korean Food',img:'https://picsum.photos/seed/tr3/300/200'},
+  {label:'Travel Indonesia',img:'https://picsum.photos/seed/tr4/300/200'},
+  {label:'Cute Pets',img:'https://picsum.photos/seed/tr5/300/200'},
+  {label:'DIY Craft',img:'https://picsum.photos/seed/tr6/300/200'},
+];
+
+const CHATS = [
+  {id:1,name:'Rina Maharani',avatar:'https://i.pravatar.cc/150?img=21',preview:'Wah cantik banget pin nya kak!',time:'09:32',unread:2,online:true,msgs:[{from:'them',text:'Halo kak! Suka banget sama pin fashion kamu 😍'},{from:'me',text:'Hehe makasih ya! Kamu juga punya taste yang bagus'},{from:'them',text:'Wah cantik banget pin nya kak!'},{from:'them',text:'Boleh minta tips nya ga kak? 🙏'}]},
+  {id:2,name:'Dinda Permata',avatar:'https://i.pravatar.cc/150?img=22',preview:'Iya dong, nanti share ya resepnya',time:'08:15',unread:0,online:true,msgs:[{from:'me',text:'Din, tadi liat pin resep kamu. Enak banget kayaknya!'},{from:'them',text:'Iya dong, nanti share ya resepnya'},{from:'me',text:'Makasih banyak ya Din 😊'}]},
+  {id:3,name:'Ayu Wandira',avatar:'https://i.pravatar.cc/150?img=23',preview:'Udah aku simpan pinnya nih hehe',time:'Kemarin',unread:1,online:false,msgs:[{from:'them',text:'Kak boleh tanya tentang dekorasi kamarnya?'},{from:'me',text:'Boleh banget! Ada yang mau ditanyain?'},{from:'them',text:'Udah aku simpan pinnya nih hehe'}]},
+  {id:4,name:'Sari Dewi',avatar:'https://i.pravatar.cc/150?img=24',preview:'Sama-sama ya kak! 💕',time:'Kemarin',unread:0,online:false,msgs:[{from:'me',text:'Hei Sari! Suka sama pin travel kamu'},{from:'them',text:'Sama-sama ya kak! 💕'}]},
+];
+
+const COMMENTS_DATA = [
+  {user:'Rina M.',avatar:'https://i.pravatar.cc/150?img=31',text:'Cantik banget! Jadi inspirasi nih 😍',time:'2j yang lalu'},
+  {user:'Dinda P.',avatar:'https://i.pravatar.cc/150?img=32',text:'Suka banget sama warnanya, aesthetic!',time:'5j yang lalu'},
+  {user:'Ayu W.',avatar:'https://i.pravatar.cc/150?img=33',text:'Pengen coba buat kayak gini juga',time:'1h yang lalu'},
+];
+
+// ===== STATE =====
+let savedPins = new Set();
+let currentPin = null;
+let currentChat = null;
+let userPins = [];
+let followedUsers = new Set();
+
+// ===== INIT =====
+function init(){
+  renderCategories();
+  renderPins(PINS,'pins-grid');
+  renderTrending();
+  renderChats();
+  renderProfilePins();
+  renderBoards();
+  setupSearch();
+}
+
+// ===== CATEGORIES =====
+function renderCategories(){
+  const el = document.getElementById('cat-tabs');
+  CATEGORIES.forEach((c,i)=>{
+    const btn = document.createElement('button');
+    btn.className='cat-tab'+(i===0?' active':'');
+    btn.textContent=c;
+    btn.onclick=()=>{
+      document.querySelectorAll('.cat-tab').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      filterPins(c);
+    };
+    el.appendChild(btn);
+  });
+}
+
+function filterPins(cat){
+  let filtered=PINS;
+  if(cat!=='Untuk Anda'){
+    const map={Mode:'fashion',Dekorasi:'dekorasi',Kuliner:'kuliner',Travel:'travel','K-Pop':'kpop',Kecantikan:'makeup',DIY:'diy',Fitness:'fitness',Teknologi:'teknologi'};
+    const key=map[cat]||cat.toLowerCase();
+    filtered=PINS.filter(p=>p.tags.some(t=>t.includes(key))||p.board.toLowerCase().includes(key)||p.title.toLowerCase().includes(cat.toLowerCase()));
+    if(!filtered.length) filtered=PINS.slice(0,6);
+  }
+  renderPins(filtered,'pins-grid');
+}
+
+// ===== PINS =====
+function renderPins(pins, containerId){
+  const el = document.getElementById(containerId);
+  el.innerHTML='';
+  const all = [...pins,...userPins];
+  all.forEach((p,i)=>{
+    el.innerHTML += makePinCard(p,i*0.05);
+  });
+}
+
+function makePinCard(p,delay=0){
+  const saved = savedPins.has(p.id);
+  return `<div class="pin-card" style="animation-delay:${delay}s" onclick="openPin(${p.id})">
+    <img src="${p.img}" alt="${p.title}" loading="lazy" onerror="this.src='https://via.placeholder.com/300x400/efefef/767676?text=Gambar'"/>
+    <button class="pin-save" onclick="event.stopPropagation();toggleSave(${p.id},this)">${saved?'✓ Tersimpan':'Simpan'}</button>
+    <div class="pin-overlay">
+      <div class="pin-title">${p.title}</div>
+      <div class="pin-board">${p.board||''}</div>
+    </div>
+  </div>`;
+}
+
+function toggleSave(id, btn){
+  if(savedPins.has(id)){
+    savedPins.delete(id);
+    btn.textContent='Simpan';
+    btn.style.background='var(--red)';
+    showToast('Dihapus dari tersimpan');
+  } else {
+    savedPins.add(id);
+    btn.textContent='✓ Tersimpan';
+    btn.style.background='#4a4a4a';
+    showToast('Pin disimpan! 📌');
+  }
+  // Update profile count
+  document.getElementById('stat-saved').textContent=savedPins.size+248;
+}
+
+// ===== PIN DETAIL =====
+function openPin(id){
+  const pin = [...PINS,...userPins].find(p=>p.id===id);
+  if(!pin) return;
+  currentPin = pin;
+  document.getElementById('pin-modal-img').src = pin.img;
+  document.getElementById('pin-modal-title').textContent = pin.title;
+  document.getElementById('pin-modal-desc').textContent = pin.desc;
+  document.getElementById('pm-avatar').src = pin.avatar;
+  document.getElementById('pm-name').textContent = pin.user;
+  document.getElementById('pm-followers').textContent = pin.followers||'';
+  document.getElementById('pm-likes').textContent = formatNum(pin.likes||0);
+  document.getElementById('pm-saves').textContent = formatNum(pin.saves||0);
+  document.getElementById('pm-views').textContent = formatNum(pin.views||0);
+  // Follow state
+  const fBtn = document.getElementById('pm-follow-btn');
+  fBtn.textContent = followedUsers.has(pin.user)?'Diikuti':'Ikuti';
+  fBtn.style.color = followedUsers.has(pin.user)?'var(--gray)':'var(--red)';
+  // Save state
+  const sBtn = document.getElementById('save-pin-btn');
+  sBtn.textContent = savedPins.has(id)?'✓ Tersimpan':'Simpan';
+  sBtn.style.background = savedPins.has(id)?'#4a4a4a':'var(--red)';
+  // Comments
+  renderComments(pin);
+  // Related
+  const related = PINS.filter(p=>p.id!==id && (p.board===pin.board||p.tags.some(t=>pin.tags.includes(t)))).slice(0,6);
+  renderPins(related.length?related:PINS.slice(0,6),'related-pins-grid');
+  document.getElementById('pin-modal').classList.add('open');
+  document.getElementById('pin-modal').scrollTop=0;
+}
+
+function closePinModal(){
+  document.getElementById('pin-modal').classList.remove('open');
+}
+
+function saveCurrentPin(){
+  if(!currentPin) return;
+  const btn = document.getElementById('save-pin-btn');
+  if(savedPins.has(currentPin.id)){
+    savedPins.delete(currentPin.id);
+    btn.textContent='Simpan';
+    btn.style.background='var(--red)';
+    showToast('Dihapus dari tersimpan');
+  } else {
+    savedPins.add(currentPin.id);
+    btn.textContent='✓ Tersimpan';
+    btn.style.background='#4a4a4a';
+    showToast('Pin disimpan! 📌');
+  }
+}
+
+function toggleFollow(btn){
+  if(!currentPin) return;
+  const user = currentPin.user;
+  if(followedUsers.has(user)){
+    followedUsers.delete(user);
+    btn.textContent='Ikuti';
+    btn.style.color='var(--red)';
+    showToast('Berhenti mengikuti');
+  } else {
+    followedUsers.add(user);
+    btn.textContent='Diikuti';
+    btn.style.color='var(--gray)';
+    showToast('Mengikuti '+user+' 👥');
+  }
+}
+
+// ===== COMMENTS =====
+function renderComments(pin){
+  const list = document.getElementById('comments-list');
+  const cmts = [...COMMENTS_DATA];
+  document.getElementById('comments-count').textContent=`Komentar (${cmts.length})`;
+  list.innerHTML = cmts.map(c=>`
+    <div class="comment-item">
+      <img class="comment-avatar" src="${c.avatar}" alt=""/>
+      <div class="comment-body">
+        <div class="comment-user">${c.user}</div>
+        <div class="comment-text">${c.text}</div>
+        <div class="comment-time">${c.time}</div>
+      </div>
+    </div>`).join('');
+}
+
+function sendComment(){
+  const input = document.getElementById('comment-input');
+  const text = input.value.trim();
+  if(!text) return;
+  const list = document.getElementById('comments-list');
+  list.innerHTML += `<div class="comment-item" style="animation:fadeIn .3s ease">
+    <img class="comment-avatar" src="https://i.pravatar.cc/150?img=47" alt=""/>
+    <div class="comment-body">
+      <div class="comment-user">Kamu</div>
+      <div class="comment-text">${text}</div>
+      <div class="comment-time">Baru saja</div>
+    </div>
+  </div>`;
+  input.value='';
+  const count=document.getElementById('comments-count');
+  const n=parseInt(count.textContent.match(/\d+/)[0])+1;
+  count.textContent=`Komentar (${n})`;
+  showToast('Komentar dikirim!');
+}
+
+// ===== TRENDING SEARCH =====
+function renderTrending(){
+  const grid = document.getElementById('trend-grid');
+  TRENDING.forEach(t=>{
+    grid.innerHTML+=`<div class="trend-card" onclick="searchTrend('${t.label}')">
+      <img src="${t.img}" alt="${t.label}" loading="lazy"/>
+      <div class="trend-label">${t.label}</div>
+    </div>`;
+  });
+}
+
+function searchTrend(q){
+  document.getElementById('search-input').value=q;
+  doSearch(q);
+}
+
+// ===== SEARCH =====
+function setupSearch(){
+  // Main nav search
+  document.getElementById('main-search').addEventListener('input',e=>{
+    if(e.target.value.trim()){
+      navigate('search');
+      document.getElementById('search-input').value=e.target.value;
+      doSearch(e.target.value);
+    }
+  });
+  document.getElementById('main-search').addEventListener('keypress',e=>{
+    if(e.key==='Enter'){navigate('search');doSearch(e.target.value);}
+  });
+  // Search page
+  document.getElementById('search-input').addEventListener('input',e=>{
+    const q=e.target.value.trim();
+    document.getElementById('search-clear').style.display=q?'block':'none';
+    if(q) doSearch(q);
+    else showTrending();
+  });
+  document.getElementById('search-input').addEventListener('keypress',e=>{
+    if(e.key==='Enter') doSearch(e.target.value);
+  });
+  document.getElementById('search-clear').onclick=()=>{
+    document.getElementById('search-input').value='';
+    document.getElementById('search-clear').style.display='none';
+    showTrending();
+  };
+}
+
+function doSearch(q){
+  if(!q.trim()){showTrending();return;}
+  const lower=q.toLowerCase();
+  const results=PINS.filter(p=>
+    p.title.toLowerCase().includes(lower)||
+    p.desc.toLowerCase().includes(lower)||
+    p.tags.some(t=>t.includes(lower))||
+    p.board.toLowerCase().includes(lower)||
+    p.user.toLowerCase().includes(lower)
+  );
+  document.getElementById('search-trending').style.display='none';
+  document.getElementById('search-results-section').style.display='block';
+  const grid=document.getElementById('search-pins');
+  if(results.length){
+    renderPins(results,'search-pins');
+  } else {
+    grid.innerHTML=`<div class="no-results" style="grid-column:1/-1">
+      <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <p>Tidak ada hasil untuk "<strong>${q}</strong>"</p>
+    </div>`;
+  }
+}
+
+function showTrending(){
+  document.getElementById('search-trending').style.display='block';
+  document.getElementById('search-results-section').style.display='none';
+}
+
+// ===== CHAT =====
+function renderChats(){
+  const list=document.getElementById('chat-list');
+  CHATS.forEach(c=>{
+    list.innerHTML+=`<div class="chat-item" onclick="openConvo(${c.id})">
+      <div class="chat-avatar">
+        <img src="${c.avatar}" alt="${c.name}"/>
+        ${c.online?'<span class="online-dot"></span>':''}
+      </div>
+      <div class="chat-info">
+        <div class="chat-name">${c.name}</div>
+        <div class="chat-preview">${c.preview}</div>
+      </div>
+      <div class="chat-meta">
+        <span class="chat-time">${c.time}</span>
+        ${c.unread?`<span class="chat-badge">${c.unread}</span>`:''}
+      </div>
+    </div>`;
+  });
+}
+
+function openConvo(id){
+  const chat=CHATS.find(c=>c.id===id);
+  if(!chat) return;
+  currentChat=chat;
+  document.getElementById('convo-avatar').src=chat.avatar;
+  document.getElementById('convo-name').textContent=chat.name;
+  document.getElementById('convo-status').textContent=chat.online?'Online':'Terakhir aktif kemarin';
+  document.getElementById('convo-status').style.color=chat.online?'#00c853':'var(--gray)';
+  // Render messages
+  const msgs=document.getElementById('chat-messages');
+  msgs.innerHTML=chat.msgs.map(m=>`
+    <div class="msg ${m.from==='me'?'sent':'received'}">
+      ${m.text}
+      <div class="msg-time">${new Date().getHours()}:${String(new Date().getMinutes()).padStart(2,'0')}</div>
+    </div>`).join('');
+  document.getElementById('chat-convo').classList.add('open');
+  setTimeout(()=>{msgs.scrollTop=msgs.scrollHeight;},100);
+}
+
+function closeConvo(){
+  document.getElementById('chat-convo').classList.remove('open');
+}
+
+function sendMessage(){
+  const input=document.getElementById('convo-input');
+  const text=input.value.trim();
+  if(!text||!currentChat) return;
+  const msgs=document.getElementById('chat-messages');
+  const time=`${new Date().getHours()}:${String(new Date().getMinutes()).padStart(2,'0')}`;
+  msgs.innerHTML+=`<div class="msg sent" style="animation:fadeIn .2s ease">${text}<div class="msg-time">${time}</div></div>`;
+  input.value='';
+  msgs.scrollTop=msgs.scrollHeight;
+  // Auto reply
+  setTimeout(()=>{
+    const replies=['Wah keren banget! 😍','Makasih ya kak! 💕','Iya bener banget!','Hehe iya nih 😊','Sip sip!','Boleh banget!','Ooh gitu ya, mantap!'];
+    const reply=replies[Math.floor(Math.random()*replies.length)];
+    msgs.innerHTML+=`<div class="msg received" style="animation:fadeIn .2s ease">${reply}<div class="msg-time">${time}</div></div>`;
+    msgs.scrollTop=msgs.scrollHeight;
+  },1200);
+}
+
+// ===== UPLOAD =====
+function openUpload(){
+  document.getElementById('upload-modal').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeUpload(){
+  document.getElementById('upload-modal').classList.remove('open');
+  document.body.style.overflow='';
+}
+function handleFileSelect(e){
+  const file=e.target.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    document.getElementById('preview-img').src=ev.target.result;
+    document.getElementById('upload-preview').style.display='block';
+    document.getElementById('upload-drop').style.display='none';
+  };
+  reader.readAsDataURL(file);
+}
+function handleDrop(e){
+  e.preventDefault();
+  document.getElementById('upload-drop').classList.remove('dragover');
+  const file=e.dataTransfer.files[0];
+  if(file&&file.type.startsWith('image/')){
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      document.getElementById('preview-img').src=ev.target.result;
+      document.getElementById('upload-preview').style.display='block';
+      document.getElementById('upload-drop').style.display='none';
+    };
+    reader.readAsDataURL(file);
+  }
+}
+function removePreview(){
+  document.getElementById('upload-preview').style.display='none';
+  document.getElementById('upload-drop').style.display='block';
+  document.getElementById('file-input').value='';
+}
+function publishPin(){
+  const title=document.getElementById('pin-title').value.trim();
+  const desc=document.getElementById('pin-desc').value.trim();
+  const imgSrc=document.getElementById('preview-img').src;
+  const board=document.getElementById('pin-board').value;
+  if(!imgSrc||imgSrc===window.location.href){showToast('Pilih gambar dulu!');return;}
+  if(!title){showToast('Isi judul pin dulu!');return;}
+  if(board==='Pilih papan...'){showToast('Pilih papan dulu!');return;}
+  const newPin={
+    id:Date.now(),img:imgSrc,title:title||'Pin Baru',
+    desc:desc||'',user:'Putri Cantika',
+    avatar:'https://i.pravatar.cc/150?img=47',
+    followers:'Kamu',likes:0,saves:0,views:0,
+    board:board,tags:['baru']
+  };
+  userPins.unshift(newPin);
+  closeUpload();
+  // Clear form
+  document.getElementById('pin-title').value='';
+  document.getElementById('pin-desc').value='';
+  document.getElementById('pin-link').value='';
+  document.getElementById('pin-board').value='Pilih papan...';
+  removePreview();
+  renderPins(PINS,'pins-grid');
+  renderProfilePins();
+  showToast('Pin berhasil dipublish! 🎉');
+  navigate('home');
+}
+
+// ===== PROFILE =====
+function renderProfilePins(){
+  const saved=PINS.filter(p=>savedPins.has(p.id));
+  const all=[...userPins,...saved,...PINS.slice(0,8)];
+  renderPins(all.slice(0,12),'profile-pins-grid');
+  // Made tab
+  renderPins(userPins.length?userPins:PINS.slice(0,4),'made-pins-grid');
+}
+
+function renderBoards(){
+  const boards=[
+    {name:'Mode & Fashion',pins:PINS.filter(p=>p.board==='Mode & Fashion').slice(0,4)},
+    {name:'Dekorasi Rumah',pins:PINS.filter(p=>p.board==='Dekorasi Rumah').slice(0,4)},
+    {name:'Kuliner',pins:PINS.filter(p=>p.board==='Kuliner').slice(0,4)},
+    {name:'Travel',pins:PINS.filter(p=>p.board==='Travel').slice(0,4)},
+  ];
+  const grid=document.getElementById('boards-grid');
+  boards.forEach(b=>{
+    const imgs=b.pins.slice(0,3);
+    grid.innerHTML+=`<div class="board-card" onclick="showToast('Membuka papan ${b.name}')">
+      <div class="board-imgs">
+        ${imgs[0]?`<img src="${imgs[0].img}" alt="" style="grid-column:1;grid-row:1/3;"/>`:''} 
+        ${imgs[1]?`<img src="${imgs[1].img}" alt=""/>`:''} 
+        ${imgs[2]?`<img src="${imgs[2].img}" alt=""/>`:''} 
+      </div>
+      <div class="board-name">${b.name}</div>
+      <div class="board-count">${b.pins.length} pin</div>
+    </div>`;
+  });
+}
+
+function switchProfileTab(tab, el){
+  document.querySelectorAll('.profile-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('profile-pins-tab').style.display='none';
+  document.getElementById('profile-boards-tab').style.display='none';
+  document.getElementById('profile-made-tab').style.display='none';
+  document.getElementById(`profile-${tab}-tab`).style.display='block';
+}
+
+// ===== EDIT PROFILE =====
+function openEditModal(){
+  document.getElementById('edit-modal').classList.add('open');
+}
+function closeEditModal(){
+  document.getElementById('edit-modal').classList.remove('open');
+}
+function saveProfile(){
+  const name=document.getElementById('edit-name').value.trim();
+  const username=document.getElementById('edit-username').value.trim();
+  if(name) document.getElementById('profile-name').textContent=name;
+  if(username) document.getElementById('profile-username').textContent=username;
+  closeEditModal();
+  showToast('Profil berhasil diperbarui! ✅');
+}
+
+// ===== NAVIGATION =====
+function navigate(page){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  const btn=document.querySelector(`[data-page="${page}"]`);
+  if(btn) btn.classList.add('active');
+}
+
+// ===== TOAST =====
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer=setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+// ===== UTILS =====
+function formatNum(n){
+  if(n>=1000000) return (n/1000000).toFixed(1)+'jt';
+  if(n>=1000) return (n/1000).toFixed(1)+'rb';
+  return n.toString();
+}
+
+// ===== START =====
+init();
+</script>
+</body>
+</html>
